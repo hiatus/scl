@@ -23,17 +23,12 @@ int main(int argc, char **argv)
 	int opt;
 	int ret = 0;
 
-	size_t size;
+	ssize_t size;
 
 	uid_t euid = geteuid();
 	gid_t egid = getegid();
 
 	uint8_t data[MAX_DATA];
-
-	if (argc < 2) {
-		fputs(banner, stderr);
-		return EXIT_FAILURE;
-	}
 
 	while ((opt = getopt(argc, argv, ":hu:g:")) != -1) {
 		switch (opt) {
@@ -80,8 +75,13 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if ((size = (optind < argc) ? _load_file(data, argv[optind]) : _load_stdin(data)) <= 0)
+	if ((size = (optind < argc) ? _load_file(data, argv[optind]) : _load_stdin(data)) < 0)
 		return EXIT_FAILURE;
+
+	if (! size) {
+		fputs("[scl] Read 0 bytes\n", stderr);
+		return EXIT_FAILURE;
+	}
 
 	if (size == MAX_DATA) {
 		fprintf(
@@ -100,7 +100,7 @@ static ssize_t _load_stdin(uint8_t data[MAX_DATA])
 {
 	ssize_t size;
 
-	if ((size = fread(data, 1, MAX_DATA, stdin)) <= 0)
+	if ((size = fread(data, 1, MAX_DATA, stdin)) < 0)
 		perror("fread");
 
 	return size;
@@ -116,7 +116,7 @@ static ssize_t _load_file(uint8_t data[MAX_DATA], const char *path)
 		return 0;
 	}
 
-	if ((size = fread(data, 1, MAX_DATA, fp)) <= 0) {
+	if ((size = fread(data, 1, MAX_DATA, fp)) < 0) {
 		perror("fread");
 		return size;
 	}
