@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	if (! (size = (optind < argc) ? _load_file(data, argv[optind]) : _load_stdin(data)))
+	if ((size = (optind < argc) ? _load_file(data, argv[optind]) : _load_stdin(data)) <= 0)
 		return EXIT_FAILURE;
 
 	if (size == MAX_DATA) {
@@ -100,10 +100,8 @@ static ssize_t _load_stdin(uint8_t data[MAX_DATA])
 {
 	ssize_t size;
 
-	if ((size = fread(data, 1, MAX_DATA, stdin)) <= 0) {
+	if ((size = fread(data, 1, MAX_DATA, stdin)) <= 0)
 		perror("fread");
-		return -1;
-	}
 
 	return size;
 }
@@ -115,12 +113,12 @@ static ssize_t _load_file(uint8_t data[MAX_DATA], const char *path)
 
 	if (! (fp = fopen(path, "rb"))) {
 		perror("fopen");
-		return -1;
+		return 0;
 	}
 
 	if ((size = fread(data, 1, MAX_DATA, fp)) <= 0) {
 		perror("fread");
-		return -1;
+		return size;
 	}
 
 	fclose(fp);
